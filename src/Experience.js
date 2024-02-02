@@ -48,11 +48,11 @@ const [clicked, click] = useState(false)
 
 
 const pointMaterial = useRef()
-useFrame((state, delta) => {
+useFrame((  state, delta) => {
    pointMaterial.current.uTime += delta
-
+console.log(state.mouse)
   //  ref.current.rotation.z += (delta * .2)
-
+  pointMaterial.current.mouse = state.mouse
     if (
      pointMaterial.current.uResolution.x === 0 &&
      pointMaterial.current.uResolution.y === 0
@@ -63,7 +63,7 @@ useFrame((state, delta) => {
     }
 })
 
-let particlesCount =50000
+let particlesCount =500
 
 const particles = useMemo(() => {
   const positions = [];
@@ -71,7 +71,7 @@ const particles = useMemo(() => {
 
   for (let i = 0; i < particlesCount; i++) {
     positions.push(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
-    velocities.push(Math.random() *2 , Math.random() *2 , Math.random() *2 );
+    velocities.push(Math.random()  , Math.random()  , Math.random()  );
   }
 
   return { positions, velocities };
@@ -79,10 +79,21 @@ const particles = useMemo(() => {
 
 useFrame(() => {
   const positions = ref.current.geometry.attributes.position.array;
-    let averageA = [0,0,0]
+    let averageA = [-5,-5,-5]
   for (let i = 0; i < positions.length /3; i++) {
     const i3 = i * 3;
-
+ 
+    if(particles[i3] >1){
+      particles[i3]*=.5
+    }
+    if(particles[i3+1] >1){
+      particles[i3+1]*=.5
+    }
+   
+    if(particles[i3+2] >1){
+      particles[i3+2]*=.5
+    }
+   
    
 
     positions[i3] += particles.velocities[i3] * 0.01;
@@ -104,7 +115,28 @@ useFrame(() => {
 
 
   // }
+  var pointA = new THREE.Vector3(positions[i3],positions[i3+1],positions[i3+2]);
+  var pointB = new THREE.Vector3(averageA[0], averageA[1],averageA[2]);
+ 
 
+  var directionVector = pointB.clone().sub(pointA);
+
+// Normalize the direction vector
+directionVector.normalize();
+
+// Now the directionVector contains the direction from pointA to pointB
+console.log(directionVector);
+
+particles.velocities[i3] += directionVector.x *.1
+particles.velocities[i3+1] += directionVector.y *.1
+particles.velocities[i3+2] += directionVector.z *.1
+
+
+
+
+  // particles[i3] = direction.subVectors( [positions[i3],positions[i3+1],positions[i3+2]], averageA )[0] ;
+  // particles[i3+1] = direction.subVectors( [positions[i3],positions[i3+1],positions[i3+2]], averageA )[1] ;
+  // particles[i3+2] = direction.subVectors( [positions[i3],positions[i3+1],positions[i3+2]], averageA )[2] ;
 
   if(Math.abs(averageA[0] - positions[i3]) < .1 && Math.abs(averageA[1] - positions[i3+1]) < .1 && Math.abs(averageA[2] - positions[i3+2]) < .1){
     particles.velocities[i3] *= -1;
@@ -113,23 +145,21 @@ useFrame(() => {
 }
    
 
-    // Add your flocking logic here
+   
 
-    // Example: Bounce back when hitting the boundaries
+    //  Bounce back when hitting the boundaries
     if (positions[i3] > 10 || positions[i3] < -10){
       particles.velocities[i3] *= -1;
-      // particles.velocities[i3 + 1] *= -1;
-      // particles.velocities[i3 + 2] *= -1;
+  
     } 
     if (positions[i3 + 1] > 10 || positions[i3 + 1] < -10) {
-      // particles.velocities[i3] *= -1;
+      
       particles.velocities[i3 + 1] *= -1;
-      // particles.velocities[i3 + 2] *= -1;
+      
     }
     
     if (positions[i3 + 2] > 10 || positions[i3 + 2] < -10){
-      // particles.velocities[i3] *= -1;
-      // particles.velocities[i3 + 1] *= -1;
+      
       particles.velocities[i3 + 2] *= -1;
     } 
 
@@ -167,7 +197,7 @@ useFrame(() => {
      averageA[0] /= positions.length/3
     averageA[1] /= positions.length/3
     averageA[2] /= positions.length/3
-    console.log(averageA)
+    
 
  
 
@@ -200,7 +230,7 @@ useFrame(() => {
 
 
 
-        <Points positions={plane.attributes.position.array} stride={3} ref={ref} rotation-x={Math.PI *  1.}onPointerMove={(e)=>  pointMaterial.current.uMouse = e.pointer} >
+        <Points positions={plane.attributes.position.array} stride={3} ref={ref} rotation-x={Math.PI *  1.} >
         <pointMaterial ref={pointMaterial} depthWrite={false} transparent />
     </Points>
 
